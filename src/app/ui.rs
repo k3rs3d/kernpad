@@ -25,7 +25,7 @@ pub fn build_ui() -> impl Widget<AppState> {
     Flex::column()
         .with_flex_child(editor, 1.0)
         .with_child(Align::left(status_label))
-        .controller(AppController::new(std::time::Duration::from_secs(1)))
+        .controller(AppController::new())
 }
 
 pub fn help_menu() -> Menu<AppState> {
