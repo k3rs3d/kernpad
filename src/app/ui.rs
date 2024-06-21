@@ -5,6 +5,7 @@ use druid::{commands, Env, Menu, MenuItem, Selector, SysMods, Widget, WidgetExt,
 pub const SAVE_FILE: Selector<()> = Selector::new("rustpad.save-file");
 pub const SAVE_FILE_AS: Selector<()> = Selector::new("rustpad.save-file-as");
 pub const LOAD_FILE: Selector<()> = Selector::new("rustpad.load-file");
+pub const SHOW_ABOUT: Selector<()> = Selector::new("show-about");
 
 pub fn build_ui() -> impl Widget<AppState> {
     let editor = TextBox::multiline()
@@ -25,8 +26,16 @@ pub fn build_ui() -> impl Widget<AppState> {
         .controller(AppController)
 }
 
+pub fn help_menu() -> Menu<AppState> {
+    Menu::new("Help")
+    .entry(MenuItem::new("About")
+    .command(SHOW_ABOUT)
+    .hotkey(SysMods::Cmd, "i")
+)
+}
+
 pub fn build_menu(_window_id: Option<WindowId>, _state: &AppState, _env: &Env) -> Menu<AppState> {
-    Menu::empty().entry(file_menu()).entry(edit_menu())
+    Menu::empty().entry(file_menu()).entry(edit_menu()).entry(help_menu())
 }
 
 pub fn file_menu() -> Menu<AppState> {
@@ -60,7 +69,7 @@ pub fn edit_menu() -> Menu<AppState> {
             MenuItem::new("Undo")
                 .command(commands::UNDO)
                 .hotkey(SysMods::Cmd, "z"),
-        ) // TODO: UNDO & REDO!!! 
+        ) // TODO: UNDO & REDO!!!
         .entry(
             MenuItem::new("Redo")
                 .command(commands::REDO)
