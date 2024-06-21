@@ -5,13 +5,17 @@ use rfd::FileDialog;
 use std::sync::Arc;
 use std::time::Duration;
 
+const SAVE_INTERVAL_SECS: u64 = 1;
+
 pub struct AppController {
     save_interval: Duration,
 }
 
 impl AppController {
-    pub fn new(save_interval: Duration) -> Self {
-        AppController { save_interval }
+    pub fn new() -> Self {
+        AppController { 
+            save_interval: Duration::from_secs(SAVE_INTERVAL_SECS) 
+        }
     }
 
     fn start_save_timer(&self, ctx: &mut EventCtx) -> TimerToken {
