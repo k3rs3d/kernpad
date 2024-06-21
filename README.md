@@ -9,8 +9,8 @@ The goal is to create a cross-platform, lightweight, and portable plain text edi
 - [x] Cross-platform (Windows, macOS, Linux)
 - [x] Basic text editing
 - [x] Load and save files
-- [ ] New File
-- [ ] Undo/Redo
+- [x] New File
+- [x] Undo/Redo
 - [ ] Find/Replace
 - [ ] Preferences for customizing the editor
 - [ ] Status bar toggle 
