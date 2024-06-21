@@ -2,6 +2,8 @@ use crate::app::{controller::AppController, AppState};
 use druid::widget::{Align, Flex, Label, TextBox};
 use druid::{commands, Env, Menu, MenuItem, Selector, SysMods, Widget, WidgetExt, WindowId};
 
+// TODO: Switch to Druid native commands for some? https://docs.rs/druid/latest/druid/commands/
+pub const NEW_FILE: Selector<()> = Selector::new("rustpad.new-file");
 pub const SAVE_FILE: Selector<()> = Selector::new("rustpad.save-file");
 pub const SAVE_FILE_AS: Selector<()> = Selector::new("rustpad.save-file-as");
 pub const LOAD_FILE: Selector<()> = Selector::new("rustpad.load-file");
@@ -19,7 +21,7 @@ pub fn build_ui() -> impl Widget<AppState> {
     })
     .padding(5.0)
     .expand_width();
-    
+
     Flex::column()
         .with_flex_child(editor, 1.0)
         .with_child(Align::left(status_label))
@@ -27,19 +29,27 @@ pub fn build_ui() -> impl Widget<AppState> {
 }
 
 pub fn help_menu() -> Menu<AppState> {
-    Menu::new("Help")
-    .entry(MenuItem::new("About")
-    .command(SHOW_ABOUT)
-    .hotkey(SysMods::Cmd, "i")
-)
+    Menu::new("Help").entry(
+        MenuItem::new("About")
+            .command(SHOW_ABOUT)
+            .hotkey(SysMods::Cmd, "i"),
+    )
 }
 
 pub fn build_menu(_window_id: Option<WindowId>, _state: &AppState, _env: &Env) -> Menu<AppState> {
-    Menu::empty().entry(file_menu()).entry(edit_menu()).entry(help_menu())
+    Menu::empty()
+        .entry(file_menu())
+        .entry(edit_menu())
+        .entry(help_menu())
 }
 
 pub fn file_menu() -> Menu<AppState> {
     Menu::new("File")
+        .entry(
+            MenuItem::new("New")
+                .command(NEW_FILE)
+                .hotkey(SysMods::Cmd, "n"),
+        )
         .entry(
             MenuItem::new("Load File")
                 .command(LOAD_FILE)
@@ -69,7 +79,7 @@ pub fn edit_menu() -> Menu<AppState> {
             MenuItem::new("Undo")
                 .command(commands::UNDO)
                 .hotkey(SysMods::Cmd, "z"),
-        ) 
+        )
         .entry(
             MenuItem::new("Redo")
                 .command(commands::REDO)

@@ -1,4 +1,4 @@
-use crate::app::{ui::LOAD_FILE, ui::SAVE_FILE, ui::SAVE_FILE_AS, AppState};
+use crate::app::{ui::NEW_FILE, ui::LOAD_FILE, ui::SAVE_FILE, ui::SAVE_FILE_AS, AppState};
 use druid::widget::Controller;
 use druid::{commands,Env, Event, EventCtx, Widget};
 use rfd::FileDialog;
@@ -92,6 +92,13 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AppController {
                         data.current_filepath = Some(path.to_string_lossy().into_owned());
                     }
                 }
+                ctx.set_handled();
+            }
+            Event::Command(cmd) if cmd.is(NEW_FILE) => {
+                // Don't recreate the whole app state, just clear the contents 
+                data.save_to_undo();
+                data.current_filepath = None;
+                data.content = String::new();
                 ctx.set_handled();
             }
             Event::Timer(id) => {
