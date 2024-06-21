@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 #[derive(Clone, Lens)]
 pub struct AppState {
-    pub content: String,
+    pub content: Arc<String>,
     pub current_filepath: Option<String>,
     undo_stack: Arc<Vec<String>>,
     redo_stack: Arc<Vec<String>>,
@@ -18,7 +18,7 @@ pub struct AppState {
 
 impl Data for AppState {
     fn same(&self, other: &Self) -> bool {
-        self.content == other.content &&
+        Arc::ptr_eq(&self.content, &other.content) &&
         self.current_filepath == other.current_filepath &&
         Arc::ptr_eq(&self.undo_stack, &other.undo_stack) &&
         Arc::ptr_eq(&self.redo_stack, &other.redo_stack) && 
@@ -30,7 +30,7 @@ impl Data for AppState {
 impl AppState {
     pub fn new() -> Self {
         AppState {
-            content: String::new(),
+            content: Arc::new(String::new()),
             current_filepath: None,
             undo_stack: Arc::new(Vec::new()),
             redo_stack: Arc::new(Vec::new()),
@@ -41,15 +41,15 @@ impl AppState {
 
     pub fn save_to_undo(&mut self) {
         let current_content = self.content.clone();
-        if self.last_committed_content != current_content {
+        if self.last_committed_content != current_content.as_str() {
             Arc::make_mut(&mut self.undo_stack).push(self.last_committed_content.clone());
-            self.last_committed_content = current_content;
+            self.last_committed_content = current_content.as_str().to_string();
             Arc::make_mut(&mut self.redo_stack).clear();
         }
     }
 
     pub fn save_to_redo(&mut self) {
-        Arc::make_mut(&mut self.redo_stack).push(self.content.clone());
+        Arc::make_mut(&mut self.redo_stack).push(self.content.as_ref().clone());
     }
 }
 
