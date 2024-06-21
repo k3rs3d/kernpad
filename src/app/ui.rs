@@ -1,6 +1,6 @@
 use crate::app::{controller::AppController, AppState};
 use druid::widget::{Align, Flex, Label, TextBox};
-use druid::{Env, Menu, MenuItem, Selector, SysMods, Widget, WidgetExt, WindowId};
+use druid::{commands, Env, Menu, MenuItem, Selector, SysMods, Widget, WidgetExt, WindowId};
 
 pub const SAVE_FILE: Selector<()> = Selector::new("rustpad.save-file");
 pub const SAVE_FILE_AS: Selector<()> = Selector::new("rustpad.save-file-as");
@@ -26,11 +26,9 @@ pub fn build_ui() -> impl Widget<AppState> {
 }
 
 pub fn build_menu(_window_id: Option<WindowId>, _state: &AppState, _env: &Env) -> Menu<AppState> {
-        Menu::new("")
-            .entry(file_menu())
-    }
+    Menu::empty().entry(file_menu()).entry(edit_menu())
+}
 
-// TODO: Fix hotkey names appended to menu label (eg "Save FileCtrl+S" instead of just "Save File")
 pub fn file_menu() -> Menu<AppState> {
     Menu::new("File")
         .entry(
@@ -46,11 +44,47 @@ pub fn file_menu() -> Menu<AppState> {
         .entry(
             MenuItem::new("Save File As")
                 .command(SAVE_FILE_AS)
-                .hotkey(SysMods::CmdShift, "s"),
+                .hotkey(SysMods::CmdShift, "S"),
         )
+        .separator()
         .entry(
             MenuItem::new("Quit")
-                .command(druid::commands::QUIT_APP)
+                .command(commands::QUIT_APP)
                 .hotkey(SysMods::Cmd, "q"),
+        )
+}
+
+pub fn edit_menu() -> Menu<AppState> {
+    Menu::new("Edit")
+        .entry(
+            MenuItem::new("Undo")
+                .command(commands::UNDO)
+                .hotkey(SysMods::Cmd, "z"),
+        ) // TODO: UNDO & REDO!!! 
+        .entry(
+            MenuItem::new("Redo")
+                .command(commands::REDO)
+                .hotkey(SysMods::Cmd, "y"),
+        )
+        .separator()
+        .entry(
+            MenuItem::new("Cut")
+                .command(commands::CUT)
+                .hotkey(SysMods::Cmd, "x"),
+        )
+        .entry(
+            MenuItem::new("Copy")
+                .command(commands::COPY)
+                .hotkey(SysMods::Cmd, "c"),
+        )
+        .entry(
+            MenuItem::new("Paste")
+                .command(commands::PASTE)
+                .hotkey(SysMods::Cmd, "v"),
+        )
+        .entry(
+            MenuItem::new("Select All")
+                .command(commands::SELECT_ALL)
+                .hotkey(SysMods::Cmd, "a"),
         )
 }
