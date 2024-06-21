@@ -1,4 +1,4 @@
-use crate::app::{controller::AppController, AppState};
+use crate::app::{controller::AppController, controller::TextChangeController, AppState};
 use druid::widget::{Align, Flex, Label, TextBox};
 use druid::{commands, Env, Menu, MenuItem, Selector, SysMods, Widget, WidgetExt, WindowId};
 
@@ -11,8 +11,9 @@ pub fn build_ui() -> impl Widget<AppState> {
     let editor = TextBox::multiline()
         .with_placeholder("Start typing...")
         .expand()
-        .lens(AppState::content);
-
+        .controller(TextChangeController)
+        .lens(AppState::content); 
+    
     let status_label = Label::new(|data: &AppState, _env: &_| match &data.current_filepath {
         Some(file) => format!("File: {}", file),
         None => "No file loaded".to_string(),
