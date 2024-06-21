@@ -3,8 +3,23 @@ use druid::widget::Controller;
 use druid::{commands,Env, Event, EventCtx, Widget};
 use rfd::FileDialog;
 use std::sync::Arc;
+use std::time::Duration;
 
-pub struct AppController;
+pub struct AppController {
+    save_interval: Duration,
+}
+
+impl AppController {
+    pub fn new(save_interval: Duration) -> Self {
+        AppController { save_interval }
+    }
+
+    fn start_save_timer(&self, ctx: &mut EventCtx, data: &mut AppState) {
+        let timer_token = ctx.request_timer(self.save_interval);
+        data.save_timer = Some(timer_token);
+    }
+}
+
 impl<W: Widget<AppState>> Controller<AppState, W> for AppController {
     fn event(
         &mut self,
@@ -15,19 +30,25 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AppController {
         env: &Env,
     ) {
         match event {
+            Event::WindowConnected => {
+                self.start_save_timer(ctx, data);
+            }
             Event::Command(cmd) if cmd.is(commands::UNDO) => {
                 if let Some(last_content) = Arc::make_mut(&mut data.undo_stack).pop() {
                     data.save_to_redo();
-                    data.content = last_content;
+                    data.content = last_content.clone();
+                    data.last_committed_content = last_content;
                 }
+                self.start_save_timer(ctx, data);
                 ctx.set_handled();
             }
             Event::Command(cmd) if cmd.is(commands::REDO) => {
                 if let Some(last_undone_content) = Arc::make_mut(&mut data.redo_stack).pop() {
                     data.save_to_undo();
-                    data.content = last_undone_content;
-                    // BUG: Cursor stays in place when text is added due to redo...
+                    data.content = last_undone_content.clone();
+                    data.last_committed_content = last_undone_content;
                 }
+                self.start_save_timer(ctx, data);
                 ctx.set_handled();
             }
             Event::Command(ref cmd) if cmd.is(UNSAVED_CONTENT) => {
@@ -66,11 +87,18 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AppController {
                 if let Some(path) = options.pick_file() {
                     if let Ok(content) = std::fs::read_to_string(&path) {
                         data.save_to_undo();
-                        data.content = content;
+                        data.content = content.clone();
+                        data.last_committed_content = content;
                         data.current_filepath = Some(path.to_string_lossy().into_owned());
                     }
                 }
                 ctx.set_handled();
+            }
+            Event::Timer(id) => {
+                if Some(*id) == data.save_timer.take() {
+                    data.save_to_undo();
+                    self.start_save_timer(ctx, data);
+                }
             }
             _ => child.event(ctx, event, data, env),
         }
@@ -80,12 +108,3 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AppController {
 
 // TODO: Refactor
 const UNSAVED_CONTENT: druid::Selector<String> = druid::Selector::new("unsaved_content");
-pub struct TextChangeController;
-impl<W: Widget<String>> Controller<String, W> for TextChangeController {
-    fn update(&mut self, child: &mut W, ctx: &mut druid::UpdateCtx, old_data: &String, data: &String, env: &Env) {
-        if old_data != data {
-            ctx.submit_command(druid::Command::new(UNSAVED_CONTENT, data.clone(), druid::Target::Auto));
-        }
-        child.update(ctx, old_data, data, env);
-    }
-}

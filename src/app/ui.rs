@@ -1,4 +1,4 @@
-use crate::app::{controller::AppController, controller::TextChangeController, AppState};
+use crate::app::{controller::AppController, AppState};
 use druid::widget::{Align, Flex, Label, TextBox};
 use druid::{commands, Env, Menu, MenuItem, Selector, SysMods, Widget, WidgetExt, WindowId};
 
@@ -11,20 +11,19 @@ pub fn build_ui() -> impl Widget<AppState> {
     let editor = TextBox::multiline()
         .with_placeholder("Start typing...")
         .expand()
-        .controller(TextChangeController)
-        .lens(AppState::content); 
-    
+        .lens(AppState::content);
+
     let status_label = Label::new(|data: &AppState, _env: &_| match &data.current_filepath {
         Some(file) => format!("File: {}", file),
         None => "No file loaded".to_string(),
     })
     .padding(5.0)
     .expand_width();
-
+    
     Flex::column()
         .with_flex_child(editor, 1.0)
         .with_child(Align::left(status_label))
-        .controller(AppController)
+        .controller(AppController::new(std::time::Duration::from_secs(1)))
 }
 
 pub fn help_menu() -> Menu<AppState> {
@@ -70,7 +69,7 @@ pub fn edit_menu() -> Menu<AppState> {
             MenuItem::new("Undo")
                 .command(commands::UNDO)
                 .hotkey(SysMods::Cmd, "z"),
-        ) // TODO: UNDO & REDO!!!
+        ) 
         .entry(
             MenuItem::new("Redo")
                 .command(commands::REDO)
